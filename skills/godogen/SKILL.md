@@ -21,6 +21,17 @@ Read each sub-file from `${CLAUDE_SKILL_DIR}/` when you reach its pipeline stage
 | `asset-gen.md` | Generate PNGs (xAI Grok) and GLBs (Tripo3D) from prompts |
 | `rembg.md` | Background removal guide — read before any rembg operation |
 
+## Starting from an External Plan
+
+If the user provides a PLAN.md written outside of godogen (e.g. written by hand or another tool), convert it first:
+
+```
+Skill(skill="godogen-plan-converter") with argument:
+  /path/to/PLAN.md
+```
+
+This adds `**Status:**`, `**Targets:**`, `**Depends on:**`, and `**Classes to use:**` fields required by the pipeline. Then proceed normally from "Check if PLAN.md exists" below.
+
 ## Pipeline
 
 ```

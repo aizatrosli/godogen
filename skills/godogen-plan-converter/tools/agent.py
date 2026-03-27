@@ -30,8 +30,7 @@ def run_agent(plan_path: str, output_path: str = None) -> str:
     if not input_file.exists():
         raise FileNotFoundError(f"Plan file not found: {plan_path}")
 
-    content = input_file.read_text()
-    result = convert_plan(content, output_path)
+    result = convert_plan(plan_path, output_path)
     return result
 
 

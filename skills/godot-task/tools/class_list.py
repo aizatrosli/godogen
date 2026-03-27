@@ -343,7 +343,7 @@ PRIORITY_CLASSES = [
     "AudioStreamPlayer",
     "AudioStreamPlayer2D",
     "AudioStreamPlayer3D",
-    # Tilemaps
+    # Tilemaps (TileMap is deprecated in Godot 4.x; prefer TileMapLayer)
     "TileMap",
     "TileMapLayer",
     "TileSet",
@@ -605,6 +605,9 @@ CLASS_UNIFIED = [
     "Signal",
 ]
 
+# KEY_CODES: Godot 4.x key scan code values (Key enum integers).
+# In GDScript prefer named constants (KEY_W, KEY_SPACE, etc.) over raw integers.
+# These values match Godot 4.x Key enum — do NOT use for Godot 3.x projects.
 KEY_CODES = {
     "W": 87,
     "A": 65,

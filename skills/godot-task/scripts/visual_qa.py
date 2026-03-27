@@ -12,11 +12,14 @@ Dynamic mode (3+ images): reference + frame sequence at 2 FPS cadence. For motio
 Uses MEDIA_RESOLUTION_HIGH. Requires: GEMINI_API_KEY or GOOGLE_API_KEY.
 """
 
+import os
 import sys
 from pathlib import Path
 
 from google import genai
 from google.genai import types
+
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
 
 STATIC_PROMPT = Path(__file__).parent / "static_prompt.md"
 DYNAMIC_PROMPT = Path(__file__).parent / "dynamic_prompt.md"
@@ -60,10 +63,10 @@ def main():
             contents.append(types.Part.from_bytes(data=p.read_bytes(), mime_type="image/png"))
         desc = f"dynamic (reference + {len(paths) - 1} frames)"
 
-    print(f"Analyzing {desc} with Gemini 3 Flash...", file=sys.stderr)
+    print(f"Analyzing {desc} with {GEMINI_MODEL}...", file=sys.stderr)
     try:
         response = client.models.generate_content(
-            model="gemini-3-flash-preview",
+            model=GEMINI_MODEL,
             contents=contents,  # type: ignore[arg-type]
             config=types.GenerateContentConfig(
                 media_resolution=types.MediaResolution.MEDIA_RESOLUTION_HIGH,

@@ -2,7 +2,7 @@
 
 - **RID leak errors on exit** — headless scene builders always produce these. Harmless; ignore them.
 - **`add_to_group()` in scene builders** — groups set at build-time persist in saved .tscn files.
-- **MultiMeshInstance3D + GLBs** — does NOT render after pack+save (mesh resource reference lost during serialization). Use individual GLB instances instead.
+- **MultiMeshInstance3D + GLBs** — does NOT render after pack+save (mesh resource reference lost during serialization). **Workaround:** Use individual `MeshInstance3D` nodes (one per GLB instance) and add them as children of a plain `Node3D` group node. Alternatively, instantiate at runtime via `PackedScene.instantiate()` instead of baking into the scene.
 - **`_ready()` skipped in `_initialize()`** — when running `--script`, `_ready()` on instantiated scene nodes does NOT fire during `_initialize()`. Call `node.generate()` or other init methods manually after `root.add_child()`.
 - **`_process()` signature in SceneTree scripts** — must be `func _process(delta: float) -> bool:` (returns bool), not void.
 - **Autoloads in SceneTree scripts** — cannot reference autoload singletons by name (compile error). Find them via `root.get_children()` and match by `.name`.
@@ -11,7 +11,7 @@
 - **`--write-movie` frame 0** — the first movie frame renders before `_process()` runs. Camera position set in `_process()` won't appear until frame 1. Pre-position the camera in `_initialize()` (via `position`/`rotation_degrees`, NOT `look_at()`) or accept a junk frame 0.
 - **`await` during `--write-movie`** — `await get_tree().process_frame` advances the movie frame counter each tick. A single await takes many movie frames, not 1. Use `_init_frames` counter in `_physics_process()` instead of await chains.
 - **Collision layer bitmask vs UI index** — `collision_layer` and `collision_mask` are bitmasks in code, NOT UI layer numbers. UI Layer 1 = bitmask 1, Layer 2 = bitmask 2, Layer 3 = bitmask 4, Layer 4 = bitmask 8 (powers of 2). `collision_layer = 4` means UI Layer 3, NOT Layer 4.
-- **GLB `material_override` doesn't serialize** — setting `material_override` on GLB-internal MeshInstance3D nodes does NOT persist in .tscn because `set_owner_on_new_nodes()` skips GLB children (has `scene_file_path`). Use procedural ArrayMesh when custom material is required.
+- **GLB `material_override` doesn't serialize** — setting `material_override` on GLB-internal MeshInstance3D nodes does NOT persist in .tscn because `set_owner_on_new_nodes()` skips GLB children (has `scene_file_path`). **Workaround:** Apply the material per surface in GDScript at runtime (`mesh_instance.set_surface_override_material(0, mat)` called after the node enters the tree), or build the mesh as a procedural `ArrayMesh` instead of loading a GLB.
 - **Camera lerp from origin** — cameras using `lerp()` in `_physics_process()` will visibly swoop from (0,0,0) on the first frame. Use an `_initialized` flag to snap position on the first frame, then lerp on subsequent frames.
 - **Chase camera `current` re-assertion** — game cameras that set `current = true` in `_physics_process()` override the test harness camera every frame. Test harnesses must disable the game camera EVERY frame.
 - **`CharacterBody3D.MOTION_MODE_FLOATING`** — also needed for 3D non-platformer movement (vehicles on slopes, snowboards). GROUNDED mode's `floor_stop_on_slope` fights slope movement.

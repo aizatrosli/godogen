@@ -7,6 +7,10 @@ Adds: **Status:**, **Targets:**, **Depends on:** fields
 Preserves: **Goal:**, **Requirements:**, **Verify:**
 
 Usage: convert.sh <input_plan.md> [output_plan.md]
+
+NOTE: TARGET_PATTERNS and DEFAULT_TARGETS below are project-specific
+(tuned for a vault/parcel game). For a different game, update these
+dicts to match the target project's file structure and domain vocabulary.
 """
 
 import sys
@@ -314,7 +318,7 @@ def convert_plan(input_path: str, output_path: str = None):
         formatted_tasks.append(format_task_block(task))
 
     # Find and preserve preamble (title + description before first task)
-    preamble_match = re.match(r'^(##.*?)(?=\n\n##\s+\d+\.\s+\d+\.\s+)', content, re.DOTALL)
+    preamble_match = re.match(r'^(##.*?)(?=\n\n##\s+\d+\.\s+)', content, re.DOTALL)
     preamble = preamble_match.group(1) if preamble_match else "# Game Plan\n\n"
 
     # Build output
