@@ -40,6 +40,22 @@ visual-qa/*.md         # Gemini vision QA reports
 
 The working directory is the project root. NEVER `cd` — use relative paths for all commands.
 
+## Documentation Skills
+
+Six documentation skills are available alongside the game development skills:
+
+| Skill | Purpose |
+|-------|---------|
+| `godot-docs-verify` | Pre-task class validation (invoked automatically by godogen) |
+| `godot-docs-lookup` | Verify a class or method exists in official docs |
+| `godot-docs-classref` | Full API reference for a specific Godot class |
+| `godot-docs-gdscript-helper` | Extract GDScript usage examples from docs |
+| `godot-docs-tutorial-finder` | Find tutorials covering a specific topic |
+| `godot-docs-bestpractices` | Look up Godot best-practice guidance |
+
+`godot-docs-verify` runs automatically before each task (called by godogen). The others are
+available for godot-task to call when hitting an API uncertainty or needing usage examples.
+
 ## Limitations
 
 - No audio support

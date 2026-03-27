@@ -103,8 +103,28 @@ static var count := 0        # Class-level static
 var bad := abs(speed)                   # ERROR: Cannot infer type from Variant
 var bad2 := clamp(val, 0.0, 1.0)        # ERROR: Same problem
 var bad3 := min(a, b)                   # ERROR: Same problem
+# Additional polymorphic math functions that also return Variant:
+var bad4 := sign(x)                     # ERROR
+var bad5 := floor(x)                    # ERROR
+var bad6 := ceil(x)                     # ERROR
+var bad7 := round(x)                    # ERROR
+var bad8 := lerp(a, b, t)              # ERROR
+var bad9 := smoothstep(0.0, 1.0, t)    # ERROR
+var bad10 := move_toward(a, b, delta)  # ERROR
+var bad11 := wrap(val, 0, 10)          # ERROR
+var bad12 := snappedf(val, 0.5)        # ERROR
+var bad13 := randf_range(0.0, 1.0)     # ERROR
+var bad14 := randi_range(0, 100)       # ERROR
+# instantiate() returns Variant:
+var bad15 := scene.instantiate()       # ERROR: Cannot infer type from Variant
+# Array/dict element access returns Variant:
+var bad16 := positions[i]              # ERROR
+var bad17 := my_dict["key"]            # ERROR
 var good: float = abs(speed)            # OK: explicit type annotation
 var also_ok = abs(speed)                # OK: untyped (Variant)
+
+# **See also:** `quirks.md` → "Type Inference Errors" for load/instantiate and collection
+# access patterns. `script-generation.md` → "Script Constraints" for the full function list.
 
 enum State { IDLE, RUN, JUMP }
 enum { ONE = 1, TWO, THREE }

@@ -55,6 +55,7 @@ Produce `PLAN.md`:
 
 ## 1. {Task Name}
 - **Depends on:** (none)
+- **Classes to use:** {Godot classes this task will use — e.g., CharacterBody3D, RigidBody3D, Area3D}
 - **Goal:** {What this task achieves and why it matters}
 - **Requirements:**
   - {High-level, testable behavior}
@@ -71,6 +72,7 @@ Produce `PLAN.md`:
 ### Task Fields
 
 - **Depends on** — task numbers that must complete before this starts. `(none)` for root tasks.
+- **Classes to use** — Godot classes this task will use. The task executor MUST look up each class in official documentation before writing code. This enables the `godot-docs-verify` pre-task validation. Examples: CharacterBody3D, RigidBody3D, Area3D, NavigationAgent3D, FileAccess, ENetMultiplayerPeer.
 - **Goal** — what this task achieves and why it matters for the game.
 - **Requirements** — high-level behaviors the task must achieve. Focus on *what* the player experiences, not *how* to implement it. The task executor is a highly capable LLM — it doesn't need implementation recipes. Specify concrete values only when they matter for game feel (e.g., "car should feel heavy, not twitchy") or correctness (e.g., "arena is 50m wide to fit 4 players").
 - **Assets needed** — visual assets this task requires, described by type, approximate size, and visual role. Omit for tasks that don't need assets. The asset planner reads these and generates the actual files, then replaces this field with concrete **Assets:** assignments.

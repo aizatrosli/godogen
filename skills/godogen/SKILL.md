@@ -41,6 +41,8 @@ User request
     |   +- Set `**Status:** pending`
     |   +- Fill `**Targets:**` with concrete project-relative files expected to change
     |     (e.g. scenes/main.tscn, scripts/player_controller.gd, project.godot)
+    |   +- **Fill `**Classes to use:**` with Godot classes the task will use**
+    |     (e.g. CharacterBody3D, RigidBody3D, Area3D)
     |     inferred from task text + scene/script mappings in STRUCTURE.md
     |
     +- Show user a concise plan summary (game name, numbered task list)
@@ -48,7 +50,14 @@ User request
     +- Find next ready task (pending, deps all done)
     +- While a ready task exists:
     |   +- Update PLAN.md: mark task status -> in_progress
-    |   +- Skill(skill="godot-task") with task block
+    |   +- **First: Validate documentation**
+    |   |   +- Skill(skill="godot-docs-verify") with task block
+    |   |   +- This ensures all declared classes exist in official docs
+    |   |   +- Fails task if any class not found
+    |   |   +- Saves lookup cache to `temp/docs_lookups_task_{N}.md`
+    |   +- **Then: Execute task**
+    |   |   +- Skill(skill="godot-task") with task block
+    |   +- Mark task completed in PLAN.md OR replan based on the outcome, summarize to user
     |   +- Mark task completed in PLAN.md OR replan based on the outcome, summarize to user
     |   +- git add . && git commit -m "Task N done"
     |   +- Find next ready task

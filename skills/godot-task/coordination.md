@@ -1,3 +1,28 @@
+## STRUCTURE.md Format
+
+Written by the scaffold step. Read it before coordinating scene+script generation.
+
+### Scene Graph section
+One entry per scene file — root node type, node hierarchy, and which script attaches where:
+```
+scenes/player.tscn
+  CharacterBody3D (root, script: scripts/player/player_controller.gd)
+  └─ SpringArm3D
+     └─ Camera3D
+```
+
+### Script Responsibilities section
+One line per .gd file — what it does and which scene node it attaches to:
+```
+scripts/player/player_controller.gd — movement + jump; attaches to CharacterBody3D in player.tscn
+```
+
+### Asset Hints section
+Describes visual assets the architecture expects (used by asset-planner):
+```
+assets/glb/player.glb — player character model, ~1m tall
+```
+
 # Coordinating Scene + Script
 
 When a task requires both scene(s) and script(s):

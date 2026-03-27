@@ -22,6 +22,15 @@ mkdir -p "$TARGET/.claude/skills"
 rsync -a --delete --exclude='doc_source/' --exclude='__pycache__/' \
     "$REPO_ROOT/skills/" "$TARGET/.claude/skills/"
 
+# Create docs_source symlink to godot-docs for godot-docs-* skills
+GODOT_DOCS_SRC="$REPO_ROOT/godot-docs"
+if [ -d "$GODOT_DOCS_SRC" ]; then
+    TARGET_DOCS_SOURCE="$TARGET/.claude/skills/godot-docs-core/docs_source"
+    # Create relative symlink
+    ln -sfn "$(cd "$GODOT_DOCS_SRC" && pwd)" "$TARGET_DOCS_SOURCE"
+    echo "Created docs_source symlink pointing to godot-docs"
+fi
+
 cp "$CLAUDE_MD" "$TARGET/CLAUDE.md"
 echo "Created CLAUDE.md (from $CLAUDE_MD)"
 
