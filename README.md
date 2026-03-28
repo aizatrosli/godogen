@@ -26,6 +26,7 @@ You describe what you want. An AI pipeline designs the architecture, generates t
   - `GOOGLE_API_KEY` — [Gemini](https://aistudio.google.com/app/api-keys), used for visual QA
   - `TRIPO3D_API_KEY` — [Tripo3D](https://platform.tripo3d.ai/), used for image-to-3D model conversion (only needed for 3D games)
 - Python 3 with pip (asset tools install their own deps)
+- System packages: `mesa-utils`, `ffmpeg` (see [setup.md](setup.md) for full details)
 - Tested on Ubuntu and Debian. macOS is untested — screenshot capture depends on X11/xvfb/Vulkan and will need a native capture path to work.
 
 ### Create a game project

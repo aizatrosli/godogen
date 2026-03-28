@@ -9,8 +9,8 @@ The Godot project is the working directory. All paths below are relative to it.
 Run once per session:
 ```bash
 GPU_DISPLAY=""
-for lock in /tmp/.X*-lock; do
-  d=":${lock##/tmp/.X}"; d="${d%-lock}"
+for sock in /tmp/.X11-unix/X*; do
+  d=":${sock##*/X}"
   if DISPLAY=$d timeout 2 glxinfo 2>/dev/null | grep -qi nvidia; then
     GPU_DISPLAY=$d; break
   fi
