@@ -26,7 +26,8 @@ You describe what you want. An AI pipeline designs the architecture, generates t
   - `GOOGLE_API_KEY` — [Gemini](https://aistudio.google.com/app/api-keys), used for visual QA
   - `TRIPO3D_API_KEY` — [Tripo3D](https://platform.tripo3d.ai/), used for image-to-3D model conversion (only needed for 3D games)
 - Python 3 with pip (asset tools install their own deps)
-- Tested on Ubuntu and Debian. macOS is untested — screenshot capture depends on X11/xvfb/Vulkan and will need a native capture path to work.
+- System packages: `mesa-utils`, `ffmpeg` (see [setup.md](setup.md) for full details including macOS)
+- Tested on Ubuntu, Debian, and macOS.
 
 ### Create a game project
 
@@ -51,7 +52,6 @@ The skills were tested across different setups. Claude Code with Opus 4.6 delive
 
 ## Roadmap
 
-- Add recipes for game builds (Android export)
 - Explore C# as GDScript alternative
 - Publish a full game end-to-end as a public demo
 - Explore Bevy Engine as Godot alternative

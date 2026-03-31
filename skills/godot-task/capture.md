@@ -1,23 +1,48 @@
 # Godot Capture
 
-Screenshot and video capture for Godot projects. Detects GPU via headless Xorg and falls back to xvfb + lavapipe.
+Screenshot and video capture for Godot projects. Supports macOS (Metal) and Linux (X11/xvfb + optional GPU).
 
 The Godot project is the working directory. All paths below are relative to it.
 
-## GPU Detection
+## Setup (run once per session)
 
-Run once per session:
+Detects platform, timeout command, GPU availability, and defines a `run_godot` wrapper that handles all platform differences. Capture commands below use `run_godot` directly.
+
 ```bash
-GPU_DISPLAY=""
-for lock in /tmp/.X*-lock; do
-  d=":${lock##/tmp/.X}"; d="${d%-lock}"
-  if DISPLAY=$d timeout 2 glxinfo 2>/dev/null | grep -qi nvidia; then
-    GPU_DISPLAY=$d; break
-  fi
-done
+PLATFORM=$(uname -s)
+
+# Timeout command — GNU timeout not available on macOS by default
+if command -v timeout &>/dev/null; then
+    TIMEOUT_CMD="timeout"
+elif command -v gtimeout &>/dev/null; then
+    TIMEOUT_CMD="gtimeout"
+else
+    timeout_fallback() { perl -e 'alarm shift; exec @ARGV' "$@"; }
+    TIMEOUT_CMD="timeout_fallback"
+fi
+
+# Platform-specific Godot launcher
+GPU_AVAILABLE=false
+if [[ "$PLATFORM" == "Darwin" ]]; then
+    GPU_AVAILABLE=true
+    run_godot() { godot --rendering-method forward_plus "$@" 2>&1; }
+else
+    # Linux — probe for GPU display
+    for sock in /tmp/.X11-unix/X*; do
+        d=":${sock##*/X}"
+        if DISPLAY=$d $TIMEOUT_CMD 2 glxinfo 2>/dev/null | grep -qi nvidia; then
+            GPU_AVAILABLE=true
+            eval "run_godot() { DISPLAY=$d godot --rendering-method forward_plus \"\$@\" 2>&1; }"
+            break
+        fi
+    done
+    if ! $GPU_AVAILABLE; then
+        run_godot() { xvfb-run -a -s '-screen 0 1280x720x24' godot --rendering-driver vulkan "$@" 2>&1; }
+    fi
+fi
 ```
 
-When `GPU_DISPLAY` is set, Godot uses hardware Vulkan with `--rendering-method forward_plus` — real shadows, SSR, SSAO, glow, volumetric fog. Without it, `xvfb-run` uses lavapipe (software rasterizer).
+When `GPU_AVAILABLE` is true (macOS Metal or Linux with NVIDIA), Godot uses hardware rendering with `--rendering-method forward_plus` — real shadows, SSR, SSAO, glow, volumetric fog. Without a GPU, `xvfb-run` uses lavapipe (software rasterizer).
 
 ## Screenshot Capture
 
@@ -25,24 +50,17 @@ Screenshots go in `screenshots/` (gitignored). Each task gets a subfolder.
 
 ```bash
 MOVIE=screenshots/{task_folder}
-rm -rf $MOVIE && mkdir -p $MOVIE
+rm -rf "$MOVIE" && mkdir -p "$MOVIE"
 touch screenshots/.gdignore
-if [ -n "$GPU_DISPLAY" ]; then
-  timeout 30 DISPLAY=$GPU_DISPLAY godot --rendering-method forward_plus \
-      --write-movie $MOVIE/frame.png \
-      --fixed-fps 10 --quit-after {N} \
-      --script test/test_task.gd 2>&1
-else
-  timeout 30 xvfb-run -a -s '-screen 0 1280x720x24' godot --rendering-driver vulkan \
-      --write-movie $MOVIE/frame.png \
-      --fixed-fps 10 --quit-after {N} \
-      --script test/test_task.gd 2>&1
-fi
+$TIMEOUT_CMD 30 run_godot \
+    --write-movie "$MOVIE"/frame.png \
+    --fixed-fps 10 --quit-after {N} \
+    --script test/test_task.gd
 ```
 
 Where `{task_folder}` is derived from the task name/number (e.g., `task_01_terrain`). Use lowercase with underscores.
 
-**Timeout:** `timeout 30` is a safety net — `--quit-after` handles exit normally. Exit code 124 means timeout fired.
+**Timeout:** `$TIMEOUT_CMD 30` is a safety net — `--quit-after` handles exit normally. Exit code 124 means timeout fired.
 
 ### Frame Rate and Duration
 
@@ -52,22 +70,26 @@ Where `{task_folder}` is derived from the task name/number (e.g., `task_01_terra
 
 ## Video Capture
 
-**Requires GPU** — video capture only works with a GPU display (`$GPU_DISPLAY` set). Software rendering is too slow and low quality for video. If no GPU is available, skip video capture and report that to the caller.
+Video capture requires hardware rendering (macOS Metal or Linux with GPU). Software rendering is too slow for video — skip and report to the caller if `GPU_AVAILABLE` is false.
 
 ```bash
-VIDEO=screenshots/presentation
-rm -rf $VIDEO && mkdir -p $VIDEO
-touch screenshots/.gdignore
-timeout 60 DISPLAY=$GPU_DISPLAY godot --rendering-method forward_plus \
-    --write-movie $VIDEO/output.avi \
-    --fixed-fps 30 --quit-after 900 \
-    --script test/presentation.gd 2>&1
-# Convert AVI (MJPEG) to MP4 (H.264)
-ffmpeg -i $VIDEO/output.avi \
-    -c:v libx264 -pix_fmt yuv420p -crf 28 -preset slow \
-    -vf "scale='min(1280,iw)':-2" \
-    -movflags +faststart \
-    $VIDEO/gameplay.mp4 2>&1
+if $GPU_AVAILABLE; then
+    VIDEO=screenshots/presentation
+    rm -rf "$VIDEO" && mkdir -p "$VIDEO"
+    touch screenshots/.gdignore
+    $TIMEOUT_CMD 60 run_godot \
+        --write-movie "$VIDEO"/output.avi \
+        --fixed-fps 30 --quit-after 900 \
+        --script test/presentation.gd
+    # Convert AVI (MJPEG) to MP4 (H.264)
+    ffmpeg -i "$VIDEO"/output.avi \
+        -c:v libx264 -pix_fmt yuv420p -crf 28 -preset slow \
+        -vf "scale='min(1280,iw)':-2" \
+        -movflags +faststart \
+        "$VIDEO"/gameplay.mp4 2>&1
+else
+    echo "No GPU available — skipping video capture"
+fi
 ```
 
 **AVI to MP4:** Godot outputs MJPEG AVI. ffmpeg converts to H.264 MP4. CRF 28 + `-preset slow` targets ~2-5MB for a 30s clip at 720p. `-movflags +faststart` enables Telegram preview streaming. Scale filter caps width at 1280px (no-op if already smaller).

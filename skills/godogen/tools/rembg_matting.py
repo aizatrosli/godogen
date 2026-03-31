@@ -193,7 +193,7 @@ def remove_background(img: np.ndarray, img_pil: Image.Image,
 
     elif regime == "trust":
         # Trust mask fully: never remove fg pixels (mask > 0.5)
-        is_bg = (alpha_color < bt) & (mask_soft < 0.5)
+        is_bg = (alpha_color < bt) | (mask_soft < 0.05)
         alpha = np.where(is_bg, alpha_color,
                          np.maximum(alpha_color, mask_soft))
 
@@ -214,6 +214,23 @@ def remove_background(img: np.ndarray, img_pil: Image.Image,
     out[:, :, :3] = (fg * 255).clip(0, 255).astype(np.uint8)
     out[:, :, 3] = (alpha * 255).clip(0, 255).astype(np.uint8)
     return out
+
+
+def make_qa_preview(rgba: np.ndarray, output_path: Path,
+                    bg_color: np.ndarray) -> Path:
+    """Composite RGBA on a contrasting solid color for visual QA.
+
+    Picks white or black — whichever contrasts more with the original bg.
+    """
+    lum = 0.299 * bg_color[0] + 0.587 * bg_color[1] + 0.114 * bg_color[2]
+    qa_rgb = (0, 0, 0) if lum > 0.5 else (255, 255, 255)
+
+    img_rgba = Image.fromarray(rgba)
+    bg_layer = Image.new("RGBA", img_rgba.size, qa_rgb + (255,))
+    bg_layer.paste(img_rgba, mask=img_rgba.split()[3])
+    preview_path = output_path.with_stem(output_path.stem + "_qa")
+    bg_layer.convert("RGB").save(preview_path)
+    return preview_path
 
 
 def process_batch(input_dir: Path, output_dir: Path, regime: str = "auto",
@@ -254,6 +271,8 @@ def main():
                         help="Background threshold override")
     parser.add_argument("--fg-thresh", type=float, default=None,
                         help="Foreground threshold override")
+    parser.add_argument("--preview", action="store_true",
+                        help="Generate QA preview on contrasting solid bg")
     args = parser.parse_args()
 
     if args.batch:
@@ -287,6 +306,11 @@ def main():
     print(f"  Opaque: {(out[:,:,3] == 255).sum()}")
     print(f"  Transparent: {(out[:,:,3] == 0).sum()}")
     print(f"  Semi-transparent: {((out[:,:,3] > 0) & (out[:,:,3] < 255)).sum()}")
+
+    # QA preview: composite on contrasting solid bg for visual inspection
+    if args.preview:
+        preview_path = make_qa_preview(out, output_path, bg_color)
+        print(f"  QA preview: {preview_path}")
 
 
 if __name__ == "__main__":

@@ -45,32 +45,33 @@ $ARGUMENTS
 5. **Generate script(s)** — write `.gd` files to `scripts/`
    - Use `doc_api/` files for API reference when writing code.
    - For each method call, verify against `doc_api/{ClassName}.md` if unsure.
-6. **Validate** — run `timeout 60 godot --headless --quit` to check for parse errors across all project scripts.
-7. **Fix errors** — if Godot reports errors, read output, fix files, re-run. Repeat until clean.
+6. **Pre-validate scripts** — catch compilation errors early before full project validation. For each newly written or modified `.gd` file, run `timeout 30 godot --headless --quit 2>&1` and filter the output for errors mentioning that file's path.
+7. **Validate** — run `timeout 60 godot --headless --quit 2>&1` to parse-check all project scripts.
+8. **Fix errors** — if Godot reports errors, read output, fix files, re-run. Repeat until clean.
    - For `Invalid call` / `method not found` errors:
      - Call `Skill(skill="godot-docs-lookup")` to verify the class/method exists.
      - Compare internal knowledge vs official docs.
      - Fix based on documentation, not assumptions.
-8. **Generate test harness** — write `test/test_{task_id}.gd` implementing the task's **Verify** scenario.
-9. **Capture screenshots** — run test with GPU display (or xvfb fallback) and `--write-movie` to produce PNGs
-10. **Verify visually** — read captured PNGs and check three things:
+9. **Generate test harness** — write `test/test_{task_id}.gd` implementing the task's **Verify** scenario.
+10. **Capture screenshots** — run test with GPU display (or xvfb fallback) and `--write-movie` to produce PNGs
+11. **Verify visually** — read captured PNGs and check three things:
     - **Task goal:** does the screenshot match the **Verify** description?
     - **Visual consistency:** if `reference.png` exists, compare against it — color palette, scale proportions, camera angle, and visual density should be consistent.
     - **Visual quality & logic:** look for obvious bugs — geometry clipping, objects floating, wrong assets, text overflow, UI elements overlapping or cut off.
     Also check harness stdout for `ASSERT FAIL`.
-    If any check fails, identify the issue, fix scene/script/test, and repeat from step 4.
-11. **Visual QA** — run automated visual QA when applicable.
-12. **Documentation audit** — After task completion, append a `## Task N — {Name}` section to `MEMORY.md` (never overwrite earlier entries). Include:
+    If any check fails, identify the issue, fix scene/script/test, and repeat from step 3 (or step 4 if only scripts changed).
+12. **Visual QA** — run automated visual QA when applicable.
+13. **Documentation audit** — After task completion, append a `## Task N — {Name}` section to `MEMORY.md` (never overwrite earlier entries). Include:
     - **Classes:** Godot classes used (`CharacterBody3D`, `SpringArm3D`, ...)
     - **Methods:** `ClassName.method_name()` one per line, note if verified via `doc_api/`
     - **Workarounds:** non-obvious fixes needed (cross-reference quirks.md where applicable)
     - **Conflicts:** discrepancies between internal knowledge and official docs
     - **Warnings:** deprecated methods used — flag with ⚠️
-13. **Store final evidence** — save screenshots in `screenshots/{task_folder}/` before reporting completion.
+14. **Store final evidence** — save screenshots in `screenshots/{task_folder}/` before reporting completion.
 
 ## Iteration Tracking
 
-Steps 3-10 form an **implement → screenshot → verify → VQA** loop.
+Steps 3-11 form an **implement → screenshot → verify → VQA** loop.
 
 There is no fixed limit for the overall implement→screenshot→verify loop — use judgment:
 - If there is progress — even in small, iterative steps — keep going. Screenshots and file updates are cheap.
@@ -105,6 +106,12 @@ timeout 60 godot --headless --script <path_to_gd_builder>
 # Validate all project scripts (parse check):
 timeout 60 godot --headless --quit 2>&1
 ```
+
+**Structured error recovery:** When a compilation error is caught:
+1. Parse the error — extract the file path, line number, and error type from Godot's output
+2. Look up the class — if the error mentions an unknown method or property, read `doc_api/{ClassName}.md` for the class involved
+3. Check quirks — cross-reference against `quirks.md` for known patterns (`:=` with `instantiate()`, polymorphic math functions, Camera2D `current`, etc.)
+4. Fix and re-validate — edit the specific file, then re-run the pre-validation step on that file only before proceeding
 
 **Error handling:** Parse Godot's stderr/stdout for error lines. Common issues:
 - `Parser Error` — syntax error in GDScript, fix the line indicated

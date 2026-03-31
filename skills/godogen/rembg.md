@@ -49,7 +49,7 @@ pip install rembg[gpu,cli]   # use rembg[cpu,cli] if no GPU
 
 ```bash
 python3 ${CLAUDE_SKILL_DIR}/tools/rembg_matting.py \
-  assets/img/car.png -o assets/img/car_nobg.png
+  assets/img/car.png -o assets/img/car_nobg.png --preview
 ```
 
 ### Batch (video frames)
@@ -84,6 +84,12 @@ Regime: trust (bg_thresh=0.05) ← auto-selected mode + thresholds
 **BG color wrong** (corners aren't bg) → regenerate image with subject centered on solid bg.
 
 **Transparent: 0** in final stats → same cause, bg detection failed entirely.
+
+## QA verification
+
+Always pass `--preview` when removing backgrounds. This generates a `_qa.png` file — the transparent result composited on a contrasting solid color (white if the original bg was dark, black if light). Read the `_qa` image to check for remnants, fringing, or missing foreground. Delete the `_qa` file after inspection.
+
+Claude's image reader cannot evaluate transparency directly — the preview is the only way to visually verify the result.
 
 ## Fixing results
 

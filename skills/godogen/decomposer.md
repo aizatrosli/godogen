@@ -46,6 +46,7 @@ Patterns that Godot handles well out of the box and that a strong LLM implements
 
 Produce `PLAN.md`:
 
+
 ````markdown
 # Game Plan: {Game Name}
 
